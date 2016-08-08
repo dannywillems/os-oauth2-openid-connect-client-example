@@ -1,0 +1,137 @@
+/* Ocsigen widget: carousel */
+
+/* $carousel-bullet-size : 1.3rem ; */
+/* $carousel-bullet-margin : 2rem ; */
+/* $carousel-menu-padding : 1rem ; */
+
+.carousel {
+
+    overflow: hidden ;
+
+}
+
+.carousel > .car2 {
+    display: flex ;
+    flex-wrap: nowrap ;
+
+    transform: translate3d(0,0,0);
+    transition-property: transform, -webkit-transform;
+    transition-timing-function: cubic-bezier(.03,.84,.56,1);
+
+    height: 100%;
+    width: 100%;
+}
+
+.carousel > .car2 .carpage {
+        width: 100% ;
+        height: 100% ;
+        margin-left: 0 ;
+        margin-right: 0 ;
+        flex-shrink: 0 ;
+        flex-grow: 0 ;
+}
+
+.carousel.horizontal {
+    touch-action: pan-y;
+}
+
+.carousel.horizontal > .car2 {
+    flex-direction: row ;
+}
+
+.carousel.vertical {
+    touch-action: pan-x;
+}
+
+.carousel.vertical > .car2 {
+    flex-direction: column ;
+}
+
+.bullet-nav {
+    list-style-type: none ;
+    display: flex ;
+    flex-direction: row ;
+    justify-content: center ;
+}
+
+.bullet-nav-item {
+
+    flex: 1 1 0 ;
+    cursor: pointer;
+    /* width: $carousel-bullet-size ; */
+    /* height: $carousel-bullet-size ; */
+
+    /* &:not(:first-child) { margin-left: $carousel-bullet-margin ; } */
+
+    /* FIXME: replace with generic UTF8 icons or delete this style */
+    /* Bullets customized in m-carousel */
+    /* @include icon-before ($bs-font-bullet) ; */
+    /* &.active::after { content: $bs-font-bullet-current ; } */
+    /* &.ok::after { content: $bs-font-bullet-checked ; } */
+    /* &.active.ok::after  { content: $bs-font-bullet-current-checked ; } */
+    /* &.ko::after { content: $bs-font-bullet-x ; } */
+    /* &.active.ko::after { content: $bs-font-bullet-x ; } */
+
+}
+
+.car-ribbon {
+
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+    cursor: pointer;
+    touch-action: pan-x;
+
+}
+
+.car-ribbon-list {
+    position: relative;
+    width: 100% ;
+    display: flex ;
+    left: 0;
+    width: 100% ;
+
+    white-space: nowrap;
+    padding: .5rem 0;
+}
+
+
+.car-ribbon-list:not(.notransition) {
+    transition-property: left;
+    transition-timing-function: cubic-bezier(.03,.84,.56,1);
+}
+
+.car-ribbon-list-item {
+
+    display: inline-block;
+    cursor: pointer;
+    padding: 0 1rem;
+    flex-grow: 1;
+    flex-shrink: 0;
+    text-align: center;
+
+}
+
+
+.car-ribbon-list-item.active { border-style: solid ; }
+
+.car-next.blurred::before,
+.car-prev.blurred::before {
+    visibility: hidden;
+}
+
+.car-cursor {
+    box-sizing: border-box;
+    position: absolute;
+    height: 3px;
+    bottom: 0;
+    background-color: #66aaff;
+    transition-property: left, right;
+}
+
+.carousel.full-height > .car2:not(.swiping) .carpage:not(.active) {
+    height: 100vh; // We limit the size of non visible columns to avoid
+                   // scolling too much in small columns
+                   // But NOT during swipe, as swiping might change the
+                   // scroll position in page.
+}
