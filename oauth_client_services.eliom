@@ -49,3 +49,11 @@ let%shared eba_connect_service =
     ~id:(Eliom_service.Path ["eba_connect"])
     ~meth:(Eliom_service.Get param)
     ()
+
+let%shared remove_registered_server_service =
+  let param = Eliom_parameter.int64 "id" in
+  Eliom_service.create
+    ~name:"remove registered server"
+    ~id:Eliom_service.Global
+    ~meth:(Eliom_service.Get param)
+    ()

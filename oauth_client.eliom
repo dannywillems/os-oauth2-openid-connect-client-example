@@ -89,7 +89,11 @@ let () =
 
   Oauth_client_base.App.register
     ~service:Eba_services.main_service
-    (Oauth_client_handlers.main_service_handler)
+    (Oauth_client_handlers.main_service_handler);
+
+  Eliom_registration.Action.register
+    ~service:Oauth_client_services.remove_registered_server_service
+    (Oauth_client_handlers.remove_registered_server_handler)
 
 
 (* -------------------------- *)

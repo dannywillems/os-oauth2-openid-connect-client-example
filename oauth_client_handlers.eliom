@@ -142,6 +142,16 @@ let form_eliom =
 (* -------------------------------------------------------------------------- *)
 
 (* -------------------------------------------------------------------------- *)
+let%client remove_oauth_client id =
+  Lwt.ignore_result
+  (
+    Eliom_client.call_service
+      ~service:Oauth_client_services.remove_registered_server_service
+      id
+      () ;
+    Eba_lib.reload ()
+  )
+
 let oauth2_server_to_html server =
   let id = Eba_oauth2.Client.id_of_registered_server server in
   let server_id = Eba_oauth2.Client.server_id_of_registered_server server in
@@ -165,7 +175,18 @@ let oauth2_server_to_html server =
     p [b [pcdata "Token URL: "] ; pcdata t_url] ;
     p [b [pcdata "Data URL: "] ; pcdata d_url] ;
     p [b [pcdata "Client ID: "] ; pcdata client_id] ;
-    p [b [pcdata "Client secret: "] ; pcdata client_secret]
+    p [b [pcdata "Client secret: "] ; pcdata client_secret] ;
+    div
+      ~a:[a_class ["text-center"]]
+      [
+        button
+          ~a:[
+            a_class ["btn" ; "btn-danger"] ;
+            a_onclick ([%client (fun _ -> remove_oauth_client ~%id)]) ;
+            a_button_type `Submit
+          ]
+          [pcdata "Unregister server"]
+      ]
   ]
 
 let oauth2_server_list_to_html () =
@@ -178,7 +199,7 @@ let oauth2_server_list_to_html () =
         ([h2 ~a:[a_class ["text-center"]] [pcdata "OAuth2.0 server list"]] @ html)
     ]
   )
-(* -------------------------------------------------------------------------- *) 
+(* -------------------------------------------------------------------------- *)
 (* -------------------------------------------------------------------------- *)
 let main_service_handler =
   fun () () ->
@@ -230,7 +251,7 @@ let eba_connect_handler =
       Eba_oauth2.Client.request_authorization_code
         (*~default_scope:"oauth"*)
         ~redirect_uri:"http://localhost:8000/redirect-uri"
-        ~server_id:"oauth-server-test"
+        ~server_id:"oauth-server-test-to-remove"
         ~scope:["name" ; "firstname"]
         ()
     in
@@ -242,3 +263,8 @@ let eba_connect_handler =
     )
   )
 (* -------------------------------------------------------------------------- *)
+
+let remove_registered_server_handler =
+  (fun id () ->
+    Eba_oauth2.Client.remove_oauth2_server_by_id id
+  )
