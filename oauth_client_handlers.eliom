@@ -251,7 +251,7 @@ let eba_connect_handler =
       Eba_oauth2.Client.request_authorization_code
         (*~default_scope:"oauth"*)
         ~redirect_uri:"http://localhost:8000/redirect-uri"
-        ~server_id:"oauth-server-test-to-remove"
+        ~server_id:"oauth-server-test"
         ~scope:["name" ; "firstname"]
         ()
     in
