@@ -120,7 +120,6 @@ let _ =
 let _ =
   Eba_oauth2.Client.register_redirect_uri
     ~redirect_uri:"http://localhost:8000/redirect-uri"
-    ~redirect_path:["redirect-uri"]
     ~success_redirection:(Eliom_registration.Redirection
     Eba_services.main_service)
     ~error_redirection:(Eliom_registration.Redirection
