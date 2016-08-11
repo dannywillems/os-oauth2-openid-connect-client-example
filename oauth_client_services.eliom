@@ -57,3 +57,13 @@ let%shared remove_registered_server_service =
     ~id:Eliom_service.Global
     ~meth:(Eliom_service.Get param)
     ()
+
+let%shared remove_token_service =
+  let param =
+    (Eliom_parameter.string "token") ** (Eliom_parameter.int64 "server_id")
+  in
+  Eliom_service.create
+    ~name:"remove token"
+    ~id:Eliom_service.Global
+    ~meth:(Eliom_service.Get param)
+    ()

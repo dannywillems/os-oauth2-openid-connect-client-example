@@ -93,7 +93,12 @@ let () =
 
   Eliom_registration.Action.register
     ~service:Oauth_client_services.remove_registered_server_service
-    (Oauth_client_handlers.remove_registered_server_handler)
+    (Oauth_client_handlers.remove_registered_server_handler);
+
+  Eliom_registration.Action.register
+    ~service:Oauth_client_services.remove_token_service
+    Oauth_client_handlers.remove_token_handler
+
 
 
 (* -------------------------- *)

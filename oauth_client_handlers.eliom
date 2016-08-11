@@ -56,6 +56,7 @@ let login =
 
 (* -------------------------------------------------------------------------- *)
 (* Eliom *)
+
 let%client update_eliom () =
   let firstname =
     Js.to_string (Jsoo_lib.get_input_by_id "signup-firstname")##.value
@@ -142,6 +143,53 @@ let form_eliom =
 (* -------------------------------------------------------------------------- *)
 
 (* -------------------------------------------------------------------------- *)
+let%client remove_token token id =
+  Lwt.ignore_result
+  (
+    Eliom_client.call_service
+      ~service:Oauth_client_services.remove_token_service
+      (token, id)
+      () ;
+    Eba_lib.reload ()
+  )
+
+let token_to_html token_tuple =
+  let (id, token, token_type, scope) = token_tuple in
+  div ~a:[a_class ["text-left" ; "padding-top"]]
+  [
+    p
+    [
+      b [pcdata "Id of server in table: "] ;
+      pcdata (string_of_int (Int64.to_int id))
+    ] ;
+    p [b [pcdata "Token: "] ; pcdata token] ;
+    p [b [pcdata "Token type: "] ; pcdata token_type] ;
+    p [b [pcdata "Scope: "] ; pcdata scope] ;
+    div ~a:[a_class ["text-center"]]
+    [
+      button
+        ~a:[
+          a_onclick ([%client (fun _ -> remove_token ~%token ~%id)]);
+          a_id "remove-token" ;
+          a_class (["btn" ; B.Button.to_string B.Button.Danger]) ;
+          a_button_type `Submit
+        ]
+        [pcdata "Remove token"]
+    ]
+  ]
+
+let token_list_to_html () =
+  let%lwt token_list = Eba_oauth2.Client.list_tokens () in
+  let html_list = List.map (fun u -> token_to_html u) token_list in
+  Lwt.return (
+  [
+    div
+      ~a:[a_class ["text-center"]]
+      ([h2 ~a:[a_class ["text-center"]] [pcdata "Tokens list"]] @ html_list)
+  ])
+(* -------------------------------------------------------------------------- *)
+
+(* -------------------------------------------------------------------------- *)
 let%client remove_oauth_client id =
   Lwt.ignore_result
   (
@@ -205,6 +253,7 @@ let main_service_handler =
   fun () () ->
     let%lwt user_list = eliom_clients_list_to_html () in
     let%lwt server_list = oauth2_server_list_to_html () in
+    let%lwt token_list = token_list_to_html () in
     Lwt.return (
       Eliom_tools.D.html
         ~title:"Welcome in OAuth2.0 Client template for Eliom"
@@ -217,8 +266,9 @@ let main_service_handler =
                 ~children:[
                   B.col ~lg:6 ~children:login () ;
                   B.col ~lg:6 ~children:[form_eliom] () ;
-                  B.col ~lg:6 ~children:user_list () ;
-                  B.col ~lg:6 ~children:server_list ()
+                  B.col ~lg:4 ~children:user_list () ;
+                  B.col ~lg:4 ~children:server_list () ;
+                  B.col ~lg:4 ~children:token_list ()
                 ]
                 ()
             ]
@@ -267,4 +317,9 @@ let eba_connect_handler =
 let remove_registered_server_handler =
   (fun id () ->
     Eba_oauth2.Client.remove_oauth2_server_by_id id
+  )
+
+let remove_token_handler =
+  (fun (token, id) () ->
+    Eba_oauth2.Client.remove_token token id
   )
