@@ -55,10 +55,11 @@ CREATE TABLE oauth2_server_client (
 );
 
 ---- Table to represent access token. There are not primary keys.
-CREATE TABLE oauth2_server_access_token (
+CREATE TABLE oauth2_server_token (
        id_client bigint not NULL references oauth2_server_client(id), -- the id from oauth2_server_client representing the client
        userid bigint not NULL references users(userid), -- the id of the user associated with the token
-       access_token text not NULL,
+       token text not NULL,
+       token_type text not NULL,
        scope text NOT NULL -- fields the client has access to
 );
 
@@ -75,4 +76,22 @@ CREATE TABLE oauth2_client_credentials (
        server_data_url text not NULL,
        client_id text not NULL,
        client_secret text not NULL
+);
+
+-- Need a table to remember tokens. We don't need to know which user of the
+-- OAuth2 server authorizes.
+-- - client_credentials_id: foreign key to the id in oauth2_client_credentials
+-- table. We need it to remember from which server comes the token.
+-- - token: the token.
+-- - token_type: the token type. For example «bearer».
+-- - scope: the scope asked when requesting the token.
+--
+-- We don't remember the data on the client because these data can change on
+-- the server.
+--)
+CREATE TABLE oauth2_client_grant_users (
+       client_credentials_id bigint not NULL references oauth2_client_credentials(id),
+       token text not NULL,
+       token_type text not NULL,
+       scope text not NULL
 )
