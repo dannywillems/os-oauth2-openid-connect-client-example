@@ -106,14 +106,14 @@ let () =
 
 let _ =
   try%lwt
-      let%lwt _ = Eba_oauth2.Client.save_oauth2_server
-        ~server_id:"oauth-server-test"
-        ~server_authorization_url:"http://localhost:8080/oauth2/authorization"
-        ~server_token_url:"http://localhost:8080/oauth2/token"
-        ~server_data_url:"http://localhost:8080/api"
-        ~client_id:"5dNGQgRXNyI7L8pO0mA9LNSTpNxOdTNvBbtv6mMzl2"
-        ~client_secret:"4B22Cu0rafkqX6Pm2q2rB2E6YCZcehyr5aZ1IHwf8H" in
-      Lwt.return ()
+    let%lwt _ = Eba_oauth2_client.save_oauth2_server
+      ~server_id:"oauth-server-test"
+      ~server_authorization_url:"http://localhost:8080/oauth2/authorization"
+      ~server_token_url:"http://localhost:8080/oauth2/token"
+      ~server_data_url:"http://localhost:8080/api"
+      ~client_id:"4UyXHdbZqwiaIuGuHk9gmM4KqtsTSPLEjW6zPAnAaa"
+      ~client_secret:"k2bB0RLBuXdEcYbyUhHwXnTtTNBsievDI4KNKFiB4D" in
+    Lwt.return ()
   with _ -> Lwt.return ()
 
 (* We save the oauth2 servers *)
@@ -123,7 +123,7 @@ let _ =
 (* We register the redirect_uri *)
 
 let _ =
-  Eba_oauth2.Client.register_redirect_uri
+  Eba_oauth2_client.register_redirect_uri
     ~redirect_uri:"http://localhost:8000/redirect-uri"
     ~success_redirection:(Eliom_registration.Redirection
     Eba_services.main_service)

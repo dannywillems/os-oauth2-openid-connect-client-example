@@ -179,7 +179,7 @@ let token_to_html token_tuple =
   ]
 
 let token_list_to_html () =
-  let%lwt token_list = Eba_oauth2.Client.list_tokens () in
+  let%lwt token_list = Eba_oauth2_client.list_tokens () in
   let html_list = List.map (fun u -> token_to_html u) token_list in
   Lwt.return (
   [
@@ -201,19 +201,19 @@ let%client remove_oauth_client id =
   )
 
 let oauth2_server_to_html server =
-  let id = Eba_oauth2.Client.id_of_registered_server server in
-  let server_id = Eba_oauth2.Client.server_id_of_registered_server server in
-  let a_url = Eba_oauth2.Client.authorization_url_of_registered_server server in
-  let t_url = Eba_oauth2.Client.token_url_of_registered_server server in
-  let d_url = Eba_oauth2.Client.data_url_of_registered_server server in
+  let id = Eba_oauth2_client.id_of_registered_server server in
+  let server_id = Eba_oauth2_client.server_id_of_registered_server server in
+  let a_url = Eba_oauth2_client.authorization_url_of_registered_server server in
+  let t_url = Eba_oauth2_client.token_url_of_registered_server server in
+  let d_url = Eba_oauth2_client.data_url_of_registered_server server in
   let client_credentials =
-    Eba_oauth2.Client.client_credentials_of_registered_server server
+    Eba_oauth2_client.client_credentials_of_registered_server server
   in
   let client_id =
-    Eba_oauth2.client_credentials_id client_credentials
+    Eba_oauth2_shared.client_credentials_id client_credentials
   in
   let client_secret =
-    Eba_oauth2.client_credentials_secret client_credentials
+    Eba_oauth2_shared.client_credentials_secret client_credentials
   in
   div ~a:[a_class ["text-left" ; "padding-top"]]
   [
@@ -238,7 +238,7 @@ let oauth2_server_to_html server =
   ]
 
 let oauth2_server_list_to_html () =
-  let%lwt l = Eba_oauth2.Client.list_servers () in
+  let%lwt l = Eba_oauth2_client.list_servers () in
   let html = List.map (fun u -> oauth2_server_to_html u) l in
   Lwt.return (
     [
@@ -298,7 +298,7 @@ let eba_connect_handler =
 
     (* Compute the service and the data to sent to the service *)
     let%lwt _ =
-      Eba_oauth2.Client.request_authorization_code
+      Eba_oauth2_client.request_authorization_code
         (*~default_scope:"oauth"*)
         ~redirect_uri:"http://localhost:8000/redirect-uri"
         ~server_id:"oauth-server-test"
@@ -316,10 +316,10 @@ let eba_connect_handler =
 
 let remove_registered_server_handler =
   (fun id () ->
-    Eba_oauth2.Client.remove_oauth2_server_by_id id
+    Eba_oauth2_client.remove_oauth2_server_by_id id
   )
 
 let remove_token_handler =
   (fun (token, id) () ->
-    Eba_oauth2.Client.remove_token token id
+    Eba_oauth2_client.remove_token token id
   )
