@@ -111,8 +111,8 @@ let _ =
       ~server_authorization_url:"http://localhost:8080/oauth2/authorization"
       ~server_token_url:"http://localhost:8080/oauth2/token"
       ~server_data_url:"http://localhost:8080/api"
-      ~client_id:"4UyXHdbZqwiaIuGuHk9gmM4KqtsTSPLEjW6zPAnAaa"
-      ~client_secret:"k2bB0RLBuXdEcYbyUhHwXnTtTNBsievDI4KNKFiB4D" in
+      ~client_id:"iiYeo5ObP6XYEN42OJSTQuvWIp4jiw3YXwImAuEaiX"
+      ~client_secret:"qv2uNbjSJH4Ufow957jfkKNne78ZdyR6uwfn1GZIav" in
     Lwt.return ()
   with _ -> Lwt.return ()
 
@@ -123,7 +123,7 @@ let _ =
 (* We register the redirect_uri *)
 
 let _ =
-  Eba_oauth2_client.register_redirect_uri
+  Eba_oauth2_client.Basic.register_redirect_uri
     ~redirect_uri:"http://localhost:8000/redirect-uri"
     ~success_redirection:(Eliom_registration.Redirection
     Eba_services.main_service)

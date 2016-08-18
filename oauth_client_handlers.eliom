@@ -153,8 +153,12 @@ let%client remove_token token id =
     Eba_lib.reload ()
   )
 
-let token_to_html token_tuple =
-  let (id, token, token_type, scope) = token_tuple in
+let token_to_html token =
+  let id         =
+    Eba_oauth2_client.Basic.id_server_of_saved_token token
+  in
+  let value      = Eba_oauth2_client.Basic.value_of_saved_token token       in
+  let token_type = Eba_oauth2_client.Basic.token_type_of_saved_token token  in
   div ~a:[a_class ["text-left" ; "padding-top"]]
   [
     p
@@ -162,14 +166,13 @@ let token_to_html token_tuple =
       b [pcdata "Id of server in table: "] ;
       pcdata (string_of_int (Int64.to_int id))
     ] ;
-    p [b [pcdata "Token: "] ; pcdata token] ;
+    p [b [pcdata "Token: "] ; pcdata value] ;
     p [b [pcdata "Token type: "] ; pcdata token_type] ;
-    p [b [pcdata "Scope: "] ; pcdata scope] ;
     div ~a:[a_class ["text-center"]]
     [
       button
         ~a:[
-          a_onclick ([%client (fun _ -> remove_token ~%token ~%id)]);
+          a_onclick ([%client (fun _ -> remove_token ~%value ~%id)]);
           a_id "remove-token" ;
           a_class (["btn" ; B.Button.to_string B.Button.Danger]) ;
           a_button_type `Submit
@@ -179,8 +182,8 @@ let token_to_html token_tuple =
   ]
 
 let token_list_to_html () =
-  let%lwt token_list = Eba_oauth2_client.list_tokens () in
-  let html_list = List.map (fun u -> token_to_html u) token_list in
+  let token_list = Eba_oauth2_client.Basic.list_tokens () in
+  let html_list  = List.map (fun u -> token_to_html u) token_list in
   Lwt.return (
   [
     div
@@ -298,12 +301,11 @@ let eba_connect_handler =
 
     (* Compute the service and the data to sent to the service *)
     let%lwt _ =
-      Eba_oauth2_client.request_authorization_code
+      Eba_oauth2_client.Basic.request_authorization_code
         (*~default_scope:"oauth"*)
         ~redirect_uri:"http://localhost:8000/redirect-uri"
         ~server_id:"oauth-server-test"
-        ~scope:["name" ; "firstname"]
-        ()
+        ~scope:[Eba_oauth2_client.Basic_scope.Firstname]
     in
 
     Lwt.return (
@@ -320,6 +322,12 @@ let remove_registered_server_handler =
   )
 
 let remove_token_handler =
-  (fun (token, id) () ->
-    Eba_oauth2_client.remove_token token id
+  (fun (value, id_server) () ->
+    let saved_token =
+      Eba_oauth2_client.Basic.saved_token_of_id_server_and_value
+        id_server
+        value
+    in
+    Eba_oauth2_client.Basic.remove_saved_token saved_token;
+    Lwt.return ()
   )
