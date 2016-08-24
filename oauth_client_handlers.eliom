@@ -17,13 +17,19 @@ let title_page () =
       ()
   ] ()
 
+let%client click_besport_oauth () =
+  Eliom_client.change_page
+    ~service:Oauth_client_services.eba_oauth2_service
+    ()
+    ();
+  Jsoo_lib.console_log "Click BeSport OAuth"
+
 let%client click_besport_connect () =
   Eliom_client.change_page
     ~service:Oauth_client_services.eba_connect_service
     ()
     ();
   Jsoo_lib.console_log "Click BeSport Connect"
-
 
 let login =
   [
@@ -39,19 +45,16 @@ let login =
         a_class ["btn" ; (B.Button.to_string B.Button.Danger) ; "besport-color"] ;
         a_button_type `Submit
       ]
-      [
-        (*
-        img
-          ~alt:"BeSport"
-          ~src:(
-            make_uri
-              ~service:(Eliom_service.static_dir ())
-              ["img" ; "besport.png"]
-          )
-          () ;
-        *)
-        pcdata "BeSport Connect"
+      [pcdata "BeSport Connect"] ;
+    button
+      ~a:[
+        a_onclick ([%client (fun _ -> click_besport_oauth ())]);
+        a_id "besport-oauth" ;
+        a_class ["btn" ; (B.Button.to_string B.Button.Danger) ; "besport-color"] ;
+        a_button_type `Submit
       ]
+      [pcdata "BeSport OAuth2.0"]
+
   ]
 
 (* -------------------------------------------------------------------------- *)
@@ -143,17 +146,17 @@ let form_eliom =
 (* -------------------------------------------------------------------------- *)
 
 (* -------------------------------------------------------------------------- *)
-let%client remove_token token id =
+let%client remove_oauth2_token token id =
   Lwt.ignore_result
   (
     Eliom_client.call_service
-      ~service:Oauth_client_services.remove_token_service
+      ~service:Oauth_client_services.remove_oauth2_token_service
       (token, id)
       () ;
     Eba_lib.reload ()
   )
 
-let token_to_html token =
+let oauth2_token_to_html token =
   let id         =
     Eba_oauth2_client.Basic.id_server_of_saved_token token
   in
@@ -172,7 +175,7 @@ let token_to_html token =
     [
       button
         ~a:[
-          a_onclick ([%client (fun _ -> remove_token ~%value ~%id)]);
+          a_onclick ([%client (fun _ -> remove_oauth2_token ~%value ~%id)]);
           a_id "remove-token" ;
           a_class (["btn" ; B.Button.to_string B.Button.Danger]) ;
           a_button_type `Submit
@@ -181,15 +184,95 @@ let token_to_html token =
     ]
   ]
 
-let token_list_to_html () =
-  let token_list = Eba_oauth2_client.Basic.list_tokens () in
-  let html_list  = List.map (fun u -> token_to_html u) token_list in
+let oauth2_token_list_to_html () =
+  let oauth2_token_list = Eba_oauth2_client.Basic.list_tokens () in
+  let html_list  = List.map (fun u -> oauth2_token_to_html u) oauth2_token_list in
   Lwt.return (
   [
     div
       ~a:[a_class ["text-center"]]
-      ([h2 ~a:[a_class ["text-center"]] [pcdata "Tokens list"]] @ html_list)
-  ])
+      ([h2 ~a:[a_class ["text-center"]] [pcdata "OAuth2 Tokens list"]] @
+      html_list) ])
+(* -------------------------------------------------------------------------- *)
+
+(* -------------------------------------------------------------------------- *)
+let%client remove_connect_token token id =
+  Lwt.ignore_result
+  (
+    Eliom_client.call_service
+      ~service:Oauth_client_services.remove_connect_token_service
+      (token, id)
+      () ;
+    Eba_lib.reload ()
+  )
+
+let connect_token_to_html token =
+  let id         =
+    Eba_connect_client.Basic.id_server_of_saved_token token
+  in
+  let value      = Eba_connect_client.Basic.value_of_saved_token token       in
+  let token_type = Eba_connect_client.Basic.token_type_of_saved_token token  in
+  let id_token   =
+    Eba_connect_client.Basic_ID_token.id_token_of_saved_token token
+  in
+  let header_token = Jwt.header_of_t id_token in
+  let payload_token = Jwt.payload_of_t id_token in
+  div ~a:[a_class ["text-left" ; "padding-top"]]
+  [
+    p
+    [
+      b [pcdata "Id of server in table: "] ;
+      pcdata (string_of_int (Int64.to_int id))
+    ] ;
+    p [b [pcdata "Token: "] ; pcdata value] ;
+    p [b [pcdata "Token type: "] ; pcdata token_type] ;
+    p [b [pcdata "Header - Algo "] ; pcdata (Jwt.algorithm_to_str
+    (Jwt.algorithm_of_header header_token))] ;
+    p [b [pcdata "Header - Typ "] ; pcdata (Jwt.typ_of_header header_token)] ;
+    p [b [pcdata "Payload - iss "] ; pcdata (Jwt.find_claim Jwt.iss
+    payload_token)] ;
+    p [b [pcdata "Payload - sub "] ; pcdata (Jwt.find_claim Jwt.sub
+    payload_token)] ;
+    p [b [pcdata "Payload - iat "] ; pcdata (
+    CalendarLib.Printer.Calendar.to_string
+      (
+        CalendarLib.Calendar.from_unixtm
+          (Unix.gmtime (float_of_string (Jwt.find_claim Jwt.iat payload_token)))
+      )
+    )] ;
+    p [b [pcdata "Payload - exp "] ; pcdata (
+    CalendarLib.Printer.Calendar.to_string
+      (
+        CalendarLib.Calendar.from_unixtm
+          (Unix.gmtime (float_of_string (Jwt.find_claim Jwt.exp payload_token)))
+      )
+    )] ;
+    p [b [pcdata "Payload - aud "] ; pcdata (Jwt.find_claim Jwt.aud
+    payload_token)] ;
+    div ~a:[a_class ["text-center"]]
+    [
+      button
+        ~a:[
+          a_onclick ([%client (fun _ -> remove_connect_token ~%value ~%id)]);
+          a_id "remove-token" ;
+          a_class (["btn" ; B.Button.to_string B.Button.Danger]) ;
+          a_button_type `Submit
+        ]
+        [pcdata "Remove token"]
+    ]
+  ]
+
+let connect_token_list_to_html () =
+  let connect_token_list = Eba_connect_client.Basic.list_tokens () in
+  let html_list  =
+    List.map (fun u -> connect_token_to_html u) connect_token_list
+  in
+  Lwt.return (
+  [
+    div
+      ~a:[a_class ["text-center"]]
+      ([h2 ~a:[a_class ["text-center"]] [pcdata "Connect Tokens list"]] @
+      html_list) ])
 (* -------------------------------------------------------------------------- *)
 
 (* -------------------------------------------------------------------------- *)
@@ -197,7 +280,7 @@ let%client remove_oauth_client id =
   Lwt.ignore_result
   (
     Eliom_client.call_service
-      ~service:Oauth_client_services.remove_registered_server_service
+      ~service:Oauth_client_services.remove_oauth2_registered_server_service
       id
       () ;
     Eba_lib.reload ()
@@ -256,7 +339,8 @@ let main_service_handler =
   fun () () ->
     let%lwt user_list = eliom_clients_list_to_html () in
     let%lwt server_list = oauth2_server_list_to_html () in
-    let%lwt token_list = token_list_to_html () in
+    let%lwt oauth2_token_list = oauth2_token_list_to_html () in
+    let%lwt connect_token_list = connect_token_list_to_html () in
     Lwt.return (
       Eliom_tools.D.html
         ~title:"Welcome in OAuth2.0 Client template for Eliom"
@@ -271,7 +355,8 @@ let main_service_handler =
                   B.col ~lg:6 ~children:[form_eliom] () ;
                   B.col ~lg:4 ~children:user_list () ;
                   B.col ~lg:4 ~children:server_list () ;
-                  B.col ~lg:4 ~children:token_list ()
+                  B.col ~lg:4 ~children:oauth2_token_list () ;
+                  B.col ~lg:4 ~children:connect_token_list ()
                 ]
                 ()
             ]
@@ -295,17 +380,33 @@ let remove_eliom_client_handler =
 (* -------------------------------------------------------------------------- *)
 
 (* -------------------------------------------------------------------------- *)
-let eba_connect_handler =
+let eba_oauth2_handler =
   (fun () () ->
-    (* You can also check if we have the data from the OAuth2.0 server *)
-
     (* Compute the service and the data to sent to the service *)
     let%lwt _ =
       Eba_oauth2_client.Basic.request_authorization_code
-        (*~default_scope:"oauth"*)
         ~redirect_uri:"http://localhost:8000/redirect-uri"
         ~server_id:"oauth-server-test"
         ~scope:[Eba_oauth2_client.Basic_scope.Firstname]
+    in
+
+    Lwt.return (
+      Eliom_tools.D.html
+        ~title:"BeSport OAuth2 temporary page"
+        Eliom_content.Html.D.(body []);
+    )
+  )
+(* -------------------------------------------------------------------------- *)
+
+(* -------------------------------------------------------------------------- *)
+let eba_connect_handler =
+  (fun () () ->
+    (* Compute the service and the data to send to the service *)
+    let%lwt _ =
+      Eba_connect_client.Basic.request_authorization_code
+        ~redirect_uri:"http://localhost:8000/redirect-uri-connect"
+        ~server_id:"openid-connect-server-test"
+        ~scope:[Eba_connect_client.Basic_scope.Firstname]
     in
 
     Lwt.return (
@@ -316,12 +417,13 @@ let eba_connect_handler =
   )
 (* -------------------------------------------------------------------------- *)
 
-let remove_registered_server_handler =
+(* -------------------------------------------------------------------------- *)
+let remove_oauth2_registered_server_handler =
   (fun id () ->
-    Eba_oauth2_client.remove_oauth2_server_by_id id
+    Eba_oauth2_client.remove_server_by_id id
   )
 
-let remove_token_handler =
+let remove_oauth2_token_handler =
   (fun (value, id_server) () ->
     let saved_token =
       Eba_oauth2_client.Basic.saved_token_of_id_server_and_value
@@ -331,3 +433,22 @@ let remove_token_handler =
     Eba_oauth2_client.Basic.remove_saved_token saved_token;
     Lwt.return ()
   )
+(* -------------------------------------------------------------------------- *)
+
+(* -------------------------------------------------------------------------- *)
+let remove_connect_registered_server_handler =
+  (fun id () ->
+    Eba_oauth2_client.remove_server_by_id id
+  )
+
+let remove_connect_token_handler =
+  (fun (value, id_server) () ->
+    let saved_token =
+      Eba_connect_client.Basic.saved_token_of_id_server_and_value
+        id_server
+        value
+    in
+    Eba_connect_client.Basic.remove_saved_token saved_token;
+    Lwt.return ()
+  )
+(* -------------------------------------------------------------------------- *)

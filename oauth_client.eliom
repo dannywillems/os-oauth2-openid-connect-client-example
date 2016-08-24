@@ -84,20 +84,35 @@ let () =
   (* -------------- *)
 
   Oauth_client_base.App.register
-    ~service:Oauth_client_services.eba_connect_service
-    (Oauth_client_handlers.eba_connect_handler);
-
-  Oauth_client_base.App.register
     ~service:Eba_services.main_service
     (Oauth_client_handlers.main_service_handler);
 
-  Eliom_registration.Action.register
-    ~service:Oauth_client_services.remove_registered_server_service
-    (Oauth_client_handlers.remove_registered_server_handler);
+  (* Eba oauth2 *)
+  Oauth_client_base.App.register
+    ~service:Oauth_client_services.eba_oauth2_service
+    (Oauth_client_handlers.eba_oauth2_handler);
 
   Eliom_registration.Action.register
-    ~service:Oauth_client_services.remove_token_service
-    Oauth_client_handlers.remove_token_handler
+    ~service:Oauth_client_services.remove_oauth2_registered_server_service
+    (Oauth_client_handlers.remove_oauth2_registered_server_handler);
+
+  Eliom_registration.Action.register
+    ~service:Oauth_client_services.remove_oauth2_token_service
+    Oauth_client_handlers.remove_oauth2_token_handler;
+
+
+  (* Eba connect *)
+  Oauth_client_base.App.register
+    ~service:Oauth_client_services.eba_connect_service
+    (Oauth_client_handlers.eba_connect_handler);
+
+  Eliom_registration.Action.register
+    ~service:Oauth_client_services.remove_connect_registered_server_service
+    (Oauth_client_handlers.remove_connect_registered_server_handler);
+
+  Eliom_registration.Action.register
+    ~service:Oauth_client_services.remove_connect_token_service
+    Oauth_client_handlers.remove_connect_token_handler
 
 
 
@@ -106,13 +121,25 @@ let () =
 
 let _ =
   try%lwt
-    let%lwt _ = Eba_oauth2_client.save_oauth2_server
+    let%lwt _ = Eba_oauth2_client.save_server
       ~server_id:"oauth-server-test"
       ~server_authorization_url:"http://localhost:8080/oauth2/authorization"
       ~server_token_url:"http://localhost:8080/oauth2/token"
       ~server_data_url:"http://localhost:8080/api"
       ~client_id:"iiYeo5ObP6XYEN42OJSTQuvWIp4jiw3YXwImAuEaiX"
       ~client_secret:"qv2uNbjSJH4Ufow957jfkKNne78ZdyR6uwfn1GZIav" in
+    Lwt.return ()
+  with _ -> Lwt.return ()
+
+let _ =
+  try%lwt
+    let%lwt _ = Eba_oauth2_client.save_server
+      ~server_id:"openid-connect-server-test"
+      ~server_authorization_url:"http://localhost:8080/connect/authorization"
+      ~server_token_url:"http://localhost:8080/connect/token"
+      ~server_data_url:"http://localhost:8080/api"
+      ~client_id:"z5kPXbATq0IF3L4Ub0ci6zaIHKl8PZ57Kv4m1ibxjm"
+      ~client_secret:"wiU6XlakbOfCnt1JxOciHSrwIMCm1f2HGjsX3WO8X1" in
     Lwt.return ()
   with _ -> Lwt.return ()
 
@@ -125,6 +152,12 @@ let _ =
 let _ =
   Eba_oauth2_client.Basic.register_redirect_uri
     ~redirect_uri:"http://localhost:8000/redirect-uri"
+    ~success_redirection:(Eliom_registration.Redirection
+    Eba_services.main_service)
+    ~error_redirection:(Eliom_registration.Redirection
+    Eba_services.main_service);
+  Eba_connect_client.Basic.register_redirect_uri
+    ~redirect_uri:"http://localhost:8000/redirect-uri-connect"
     ~success_redirection:(Eliom_registration.Redirection
     Eba_services.main_service)
     ~error_redirection:(Eliom_registration.Redirection

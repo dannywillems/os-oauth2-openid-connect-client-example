@@ -42,6 +42,7 @@ let%shared remove_eliom_client =
     ~meth:(Eliom_service.Get param)
     ()
 
+(* -------------------------------------------------------------------------- *)
 let%shared eba_connect_service =
   let param = Eliom_parameter.unit in
   Eliom_service.create
@@ -50,20 +51,49 @@ let%shared eba_connect_service =
     ~meth:(Eliom_service.Get param)
     ()
 
-let%shared remove_registered_server_service =
+let%shared remove_connect_registered_server_service =
   let param = Eliom_parameter.int64 "id" in
   Eliom_service.create
-    ~name:"remove registered server"
+    ~name:"remove connect registered server"
     ~id:Eliom_service.Global
     ~meth:(Eliom_service.Get param)
     ()
 
-let%shared remove_token_service =
+let%shared remove_connect_token_service =
   let param =
     (Eliom_parameter.string "token") ** (Eliom_parameter.int64 "server_id")
   in
   Eliom_service.create
-    ~name:"remove token"
+    ~name:"remove connect token"
     ~id:Eliom_service.Global
     ~meth:(Eliom_service.Get param)
     ()
+(* -------------------------------------------------------------------------- *)
+
+(* -------------------------------------------------------------------------- *)
+let%shared eba_oauth2_service =
+  let param = Eliom_parameter.unit in
+  Eliom_service.create
+    ~name:"eba_oauth2_service"
+    ~id:(Eliom_service.Path ["eba_oauth2"])
+    ~meth:(Eliom_service.Get param)
+    ()
+
+let%shared remove_oauth2_registered_server_service =
+  let param = Eliom_parameter.int64 "id" in
+  Eliom_service.create
+    ~name:"remove oauth2 registered server"
+    ~id:Eliom_service.Global
+    ~meth:(Eliom_service.Get param)
+    ()
+
+let%shared remove_oauth2_token_service =
+  let param =
+    (Eliom_parameter.string "token") ** (Eliom_parameter.int64 "server_id")
+  in
+  Eliom_service.create
+    ~name:"remove oauth2 token"
+    ~id:Eliom_service.Global
+    ~meth:(Eliom_service.Get param)
+    ()
+(* -------------------------------------------------------------------------- *)
